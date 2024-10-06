@@ -77,12 +77,12 @@ def Merge_Files_ANL1_Attandace(): # werkt nog niet
                 print("TRUE")
                 print(s2)
     print(df_attandace.head)
-    merged_data = pd.merge(df_students, df_attandace[['id', 'Attendance %']], on='id', how='left')
-    merged_data.rename(columns={'Attendance %': 'Attandace ANL1'}, inplace=True)  # Change column name
-    column_order = list(df_students.columns) + ['Attandace ANL1'] 
+    merged_data = pd.merge(df_students, df_attandace[['id', 'Attendance %', "Team assignment"]], on='id', how='left')
+    merged_data.rename(columns={'Attendance %': 'Attandace ANL1', 'Team assignment': 'Team Assignment ANL1'}, inplace=True)  # Change column name
+    column_order = list(df_students.columns) + ['Attandace ANL1' ,  'Team Assignment ANL1'] 
     merged_data = merged_data[column_order]
 
     output_file = os.path.join("..", "..", "data", "processed", "Merged_students_ANL1+ANL2.xlsx")
     merged_data.to_excel(output_file, index=False)
 
-Merge_Files_ANL2_Attandace()
+Merge_Files_ANL1_Attandace()
