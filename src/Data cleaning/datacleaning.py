@@ -84,5 +84,51 @@ def Merge_Files_ANL1_Attandace(): # werkt nog niet
 
     output_file = os.path.join("..", "..", "data", "processed", "Merged_students_ANL1+ANL2.xlsx")
     merged_data.to_excel(output_file, index=False)
+    
 
-Merge_Files_ANL1_Attandace()
+
+def Clean_Master_list():
+    students = os.path.join("..", "..", "data", "raw", "Master list for students.xlsx")
+
+    df_students = pd.read_excel(students)
+
+    filtered_df = df_students[df_students['Group'].apply(lambda x: len(str(x)) == 1) | (df_students['Group'] == 'DINF1') | (df_students['Group'] == 'DINF2')]
+
+    sorted_df = filtered_df.sort_values(by='Group')
+
+    output_path = os.path.join("..", "..", "data", "processed", "Cleaned_master_student_list.xlsx")
+    sorted_df.to_excel(output_path, index=False)
+
+def Merge_ANL3_FC():
+    ANL_3_results = os.path.join("..", "..", "data", "raw", "INFANL3-2020-2021 EXAM first chance.xlsx")
+    student_file = os.path.join("..", "..", "data", "processed", "Cleaned_master_student_list.xlsx")
+
+    df_students = pd.read_excel(student_file)
+    df_ANL_3_results= pd.read_excel(ANL_3_results , sheet_name="Grades")
+
+    merged_data = pd.merge(df_students, df_ANL_3_results[["ID", "Grade", "Outcome"]], on='ID', how='left')
+    merged_data.rename(columns={'Grade': 'ANL3 Fc Grade', 'Outcome': 'ANL3 Fc Outcome'}, inplace=True)  # Change column name
+    column_order = list(df_students.columns) + ['ANL3 Fc Grade' ,  'ANL3 Fc Outcome'] 
+    merged_data = merged_data[column_order]
+
+    output_file = os.path.join("..", "..", "data", "processed", "ANL3_FC_Student_Merge.xlsx")
+    merged_data.to_excel(output_file, index=False)
+
+
+def Merge_ANL3_SC():
+    ANL_3_results_SC = os.path.join("..", "..", "data", "raw", "INFANL3-2020-2021 EXAM second chance.xlsx")
+    student_file = os.path.join("..", "..", "data", "processed", "ANL3_FC_Student_Merge.xlsx")
+
+    df_students = pd.read_excel(student_file)
+    df_ANL_3_results= pd.read_excel(ANL_3_results_SC , sheet_name="Grades")
+
+    merged_data = pd.merge(df_students, df_ANL_3_results[["ID", "Grade", "Outcome"]], on='ID', how='left')
+    merged_data.rename(columns={'Grade': 'ANL3 Sc Grade', 'Outcome': 'ANL3 Sc Outcome'}, inplace=True)  # Change column name
+    column_order = list(df_students.columns) + ['ANL3 Sc Grade' ,  'ANL3 Sc Outcome'] 
+    merged_data = merged_data[column_order]
+
+    output_file = os.path.join("..", "..", "data", "processed", "ANL3_FC&SC_Student_Merge.xlsx")
+    merged_data.to_excel(output_file, index=False)
+
+
+Merge_ANL3_SC()
