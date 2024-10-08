@@ -1,10 +1,12 @@
 import pandas as pd
 import os
 
+master_student_list = os.path.join("..", "..", "data", "processed", "Cleaned_master_student_list.xlsx")
+combined_students = os.path.join("..", "..", "data", "processed", "combined_students.xlsx")
+
 def CombineFiles():
     students_file_2 = os.path.join("..", "..", "data", "raw", "(anonymised) Eerstejaars studenten INF met einddatum en reden - additional students TWO.xlsx")
     students_file_1 = os.path.join("..", "..", "data", "raw", "(anonymised) Eerstejaars studenten INF met einddatum en reden ONE.xlsx")
-
 
     # Read the Excel files directly
     df_student_1 = pd.read_excel(students_file_1)  # For reading Excel files
@@ -130,5 +132,30 @@ def Merge_ANL3_SC():
     output_file = os.path.join("..", "..", "data", "processed", "ANL3_FC&SC_Student_Merge.xlsx")
     merged_data.to_excel(output_file, index=False)
 
+def add_dropout_column():
+    pd.set_option('display.max_rows', None)
+    
+    df_master = pd.read_excel(master_student_list)
+    df_master.columns = df_master.columns.str.lower()
+    
+    df_combined_students = pd.read_excel(combined_students)
+    df_combined_students.columns = df_combined_students.columns.str.lower()
+    
+    filter_condition = lambda df: (df['school'] == 'Hogeschool Rotterdam') & (df['opleiding'].str.startswith('INF'))
+    df_students_filtered = df_combined_students[filter_condition(df_combined_students)]
+    
+    merged_df = df_master.merge(df_students_filtered[['id', 'stakingsdatum', 'school', 'opleiding']], on='id', how='left')
+    
+    # Group by ID and determine dropout status based on 'Stakingsdatum' presence
+    # yes = all rows of stakingsdatum have a date
+    # no = no rows of stakingsdatum have a date
+    # ? = some rows of stakingsdatum have a date and some rows do not
+    dropout_status = merged_df.groupby('id')['stakingsdatum'].apply(
+        lambda x: 'yes' if x.notna().all() else 'no'
+    )
+    
+    df_master['dropped out'] = df_master['id'].map(dropout_status)
 
-Merge_ANL3_SC()
+    df_master.to_excel(master_student_list, index=False)
+
+# add_dropout_column()
