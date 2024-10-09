@@ -133,6 +133,7 @@ def Merge_ANL3_SC():
     merged_data.to_excel(output_file, index=False)
 
 def add_dropout_column():
+
     pd.set_option('display.max_rows', None)
     
     df_master = pd.read_excel(master_student_list)
@@ -159,3 +160,25 @@ def add_dropout_column():
     df_master.to_excel(master_student_list, index=False)
 
 # add_dropout_column()
+
+
+def End_Result_ANL3():
+    ANL_3_results = os.path.join("..", "..", "data", "processed", "ANL3_FC&SC_Student_Merge.xlsx")
+
+    df_ANL3 = pd.read_excel(ANL_3_results)
+
+
+    df_ANL3['ANL3 Final Grade'] = df_ANL3[['ANL3 Fc Grade', 'ANL3 Sc Grade']].max(axis=1)
+
+    
+    df_ANL3['ANL3 Final Result'] = df_ANL3.apply(
+    lambda row: 'PASS' if row['ANL3 Fc Outcome'] == 'PASS' or row['ANL3 Sc Outcome'] == 'PASS' else 'FAIL',
+    axis=1
+    )
+
+    output_file = os.path.join("..", "..", "data", "processed", "ANL3_FULLY_MERGED.xlsx")
+    df_ANL3.to_excel(output_file, index=False)
+
+
+
+End_Result_ANL3()
