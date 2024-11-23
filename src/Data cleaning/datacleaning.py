@@ -197,6 +197,57 @@ def End_Result_ANL3():
     output_file = os.path.join("..", "..", "data", "processed", "ANL3_FULLY_MERGED.xlsx")
     df_ANL3.to_excel(output_file, index=False)
 
-
-
 # End_Result_ANL3()
+
+def update_outcomes():
+    # Load the master student list
+    master_student_list = os.path.join("..", "..", "data", "processed", "Cleaned_master_student_list_final.xlsx")
+    df = pd.read_excel(master_student_list)
+
+    # Identify columns with grades and outcomes
+    grade_columns = [col for col in df.columns if "grade" in col.lower()]
+    outcome_columns = [col for col in df.columns if "outcome" in col.lower()]
+
+    # Update the outcomes based on the grade thresholds
+    for grade_col, outcome_col in zip(grade_columns, outcome_columns):
+        # Ensure the grades are treated as floats
+        df[grade_col] = pd.to_numeric(df[grade_col], errors='coerce')
+
+    # Identify columns with grades and outcomes
+    grade_columns = [col for col in df.columns if "grade" in col.lower()]
+    outcome_columns = [col for col in df.columns if "outcome" in col.lower()]
+
+    # Update the outcomes based on the grade thresholds
+    for grade_col, outcome_col in zip(grade_columns, outcome_columns):
+        # Ensure the grades are treated as floats
+        df[grade_col] = pd.to_numeric(df[grade_col], errors='coerce')
+
+        # Define the conditions and corresponding outcomes
+        conditions = [
+            (df[grade_col] >= 0) & (df[grade_col] < 3),
+            (df[grade_col] >= 3) & (df[grade_col] < 5.5),
+            (df[grade_col] >= 5.5) & (df[grade_col] < 7.5),
+            (df[grade_col] >= 7.5) & (df[grade_col] <= 10),
+        ]
+        outcomes = [
+            "FAIL MISERABLY",
+            "FAIL",
+            "PASS",
+            "PASS GREATLY",
+        ]
+
+        # Update the outcome column only for rows where the grade is not NaN
+        df.loc[df[grade_col].notna(), outcome_col] = pd.cut(
+            df.loc[df[grade_col].notna(), grade_col],
+            bins=[-float("inf"), 3, 5.5, 7.5, float("inf")],
+            labels=outcomes,
+            include_lowest=True,
+        ).astype(str)
+
+    # Save the updated DataFrame back to the same file
+    df.to_excel(master_student_list, index=False)
+    print(f"Outcomes updated and saved back to {master_student_list}")
+
+# Use the function on your file
+# update_outcomes()
+
