@@ -251,3 +251,64 @@ def update_outcomes():
 # Use the function on your file
 # update_outcomes()
 
+
+
+#End_Result_ANL3()
+
+
+def End_Result_ANL1():
+    ANL_1_results = os.path.join("..", "..", "data", "processed", "Cleaned_master_student_list_final.xlsx")
+
+    df_ANL1 = pd.read_excel(ANL_1_results)
+
+
+    df_ANL1['ANL1 Final Grade'] = df_ANL1[['ANL1 Fc Grade', 'ANL1 Sc Grade']].max(axis=1)
+
+    
+    df_ANL1['ANL1 Final Result'] = df_ANL1.apply(
+    lambda row: 'PASS' if row['ANL1 Fc Outcome'] == 'PASS' or row['ANL1 Sc Outcome'] == 'PASS' else 'FAIL',
+    axis=1
+    )
+
+    output_file = os.path.join("..", "..", "data", "processed", "Cleaned_master_student_list_finalv2.xlsx")
+    df_ANL1.to_excel(output_file, index=False)
+
+
+
+def End_Result_ANL2():
+    ANL_1_results = os.path.join("..", "..", "data", "processed", "Cleaned_master_student_list_finalv2.xlsx")
+
+    df_ANL1 = pd.read_excel(ANL_1_results)
+
+
+    df_ANL1['ANL2 Final Grade'] = df_ANL1[['ANL2 Fc Grade', 'ANL2 Sc Grade']].max(axis=1)
+
+    
+    df_ANL1['ANL2 Final Result'] = df_ANL1.apply(
+    lambda row: 'PASS' if row['ANL2 Fc Outcome'] == 'PASS' or row['ANL2 Sc Outcome'] == 'PASS' else 'FAIL',
+    axis=1
+    )
+
+    output_file = os.path.join("..", "..", "data", "processed", "Cleaned_master_student_list_finalv3.xlsx")
+    df_ANL1.to_excel(output_file, index=False)
+
+
+def End_Result_ANL4():
+    ANL_1_results = os.path.join("..", "..", "data", "processed", "Cleaned_master_student_list_finalv3.xlsx")
+
+    df_ANL1 = pd.read_excel(ANL_1_results)
+
+
+    df_ANL1['ANL4 Final Grade'] = df_ANL1[['ANL4 Fc Grade', 'ANL4 Sc Grade']].max(axis=1)
+
+    
+    df_ANL1['ANL4 Final Result'] = df_ANL1.apply(
+    lambda row: 'PASS' if row['ANL4 Fc Outcome'] == 'PASS' or row['ANL4 Sc Outcome'] == 'PASS' else 'FAIL',
+    axis=1
+    )
+
+    output_file = os.path.join("..", "..", "data", "processed", "Cleaned_master_student_list_finalv4.xlsx")
+    df_ANL1.to_excel(output_file, index=False)
+
+End_Result_ANL4()
+
