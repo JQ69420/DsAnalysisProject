@@ -132,34 +132,52 @@ def Merge_ANL3_SC():
     output_file = os.path.join("..", "..", "data", "processed", "ANL3_FC&SC_Student_Merge.xlsx")
     merged_data.to_excel(output_file, index=False)
 
-def add_dropout_column():
+def add_dropout_date():
+    # File paths
+    master_student_list = os.path.join("..", "..", "data", "processed", "Cleaned_master_student_list_final.xlsx")
+    combined_students = os.path.join("..", "..", "data", "processed", "combined_students_unique.xlsx")
 
-    pd.set_option('display.max_rows', None)
-    
+    # Load and preprocess the data
     df_master = pd.read_excel(master_student_list)
     df_master.columns = df_master.columns.str.lower()
-    
+
     df_combined_students = pd.read_excel(combined_students)
     df_combined_students.columns = df_combined_students.columns.str.lower()
-    
-    filter_condition = lambda df: (df['school'] == 'Hogeschool Rotterdam') & (df['opleiding'].str.startswith('INF'))
-    df_students_filtered = df_combined_students[filter_condition(df_combined_students)]
-    
-    merged_df = df_master.merge(df_students_filtered[['id', 'stakingsdatum', 'school', 'opleiding']], on='id', how='left')
-    
-    # Group by ID and determine dropout status based on 'Stakingsdatum' presence
-    # yes = all rows of stakingsdatum have a date
-    # no = no rows of stakingsdatum have a date
-    # ? = some rows of stakingsdatum have a date and some rows do not
-    dropout_status = merged_df.groupby('id')['stakingsdatum'].apply(
-        lambda x: 'yes' if x.notna().all() else 'no'
-    )
-    
-    df_master['dropped out'] = df_master['id'].map(dropout_status)
 
+    # Ensure 'dropped out' column exists in df_master
+    if 'dropped out' not in df_master.columns:
+        raise ValueError("The master student list must have a 'dropped out' column.")
+
+    # Initialize a new column for dropout dates
+    df_master['dropout date'] = ''
+
+    # Loop through each student with 'dropped out' = 'yes'
+    for index, row in df_master.iterrows():
+        if row['dropped out'].strip().lower() == 'yes':
+            student_id = row['id']
+
+            # Filter the combined_students DataFrame for matching IDs
+            matched_rows = df_combined_students[df_combined_students['id'] == student_id]
+
+            if not matched_rows.empty:
+                # Get unique dates from stakingsdatum
+                unique_dates = matched_rows['stakingsdatum'].dropna().unique()
+
+                # If multiple dates exist, log a warning and pick the first one
+                if len(unique_dates) > 1:
+                    print(f"Warning: Multiple dropout dates found for ID {student_id}. Using the first one.")
+                dropout_date = unique_dates[0] if unique_dates.size > 0 else 'unknown'
+            else:
+                dropout_date = 'unknown'
+
+            # Assign the dropout date
+            df_master.at[index, 'dropout date'] = dropout_date
+
+    # Save the updated master student list back to an Excel file
     df_master.to_excel(master_student_list, index=False)
 
-# add_dropout_column()
+# Run the function
+# add_dropout_date()
 
 
 def End_Result_ANL3():
@@ -179,6 +197,57 @@ def End_Result_ANL3():
     output_file = os.path.join("..", "..", "data", "processed", "ANL3_FULLY_MERGED.xlsx")
     df_ANL3.to_excel(output_file, index=False)
 
+# End_Result_ANL3()
 
+def update_outcomes():
+    # Load the master student list
+    master_student_list = os.path.join("..", "..", "data", "processed", "Cleaned_master_student_list_final.xlsx")
+    df = pd.read_excel(master_student_list)
 
-End_Result_ANL3()
+    # Identify columns with grades and outcomes
+    grade_columns = [col for col in df.columns if "grade" in col.lower()]
+    outcome_columns = [col for col in df.columns if "outcome" in col.lower()]
+
+    # Update the outcomes based on the grade thresholds
+    for grade_col, outcome_col in zip(grade_columns, outcome_columns):
+        # Ensure the grades are treated as floats
+        df[grade_col] = pd.to_numeric(df[grade_col], errors='coerce')
+
+    # Identify columns with grades and outcomes
+    grade_columns = [col for col in df.columns if "grade" in col.lower()]
+    outcome_columns = [col for col in df.columns if "outcome" in col.lower()]
+
+    # Update the outcomes based on the grade thresholds
+    for grade_col, outcome_col in zip(grade_columns, outcome_columns):
+        # Ensure the grades are treated as floats
+        df[grade_col] = pd.to_numeric(df[grade_col], errors='coerce')
+
+        # Define the conditions and corresponding outcomes
+        conditions = [
+            (df[grade_col] >= 0) & (df[grade_col] < 3),
+            (df[grade_col] >= 3) & (df[grade_col] < 5.5),
+            (df[grade_col] >= 5.5) & (df[grade_col] < 7.5),
+            (df[grade_col] >= 7.5) & (df[grade_col] <= 10),
+        ]
+        outcomes = [
+            "FAIL MISERABLY",
+            "FAIL",
+            "PASS",
+            "PASS GREATLY",
+        ]
+
+        # Update the outcome column only for rows where the grade is not NaN
+        df.loc[df[grade_col].notna(), outcome_col] = pd.cut(
+            df.loc[df[grade_col].notna(), grade_col],
+            bins=[-float("inf"), 3, 5.5, 7.5, float("inf")],
+            labels=outcomes,
+            include_lowest=True,
+        ).astype(str)
+
+    # Save the updated DataFrame back to the same file
+    df.to_excel(master_student_list, index=False)
+    print(f"Outcomes updated and saved back to {master_student_list}")
+
+# Use the function on your file
+# update_outcomes()
+
