@@ -421,7 +421,46 @@ def dropout_by_outcome():
 
 # dropout_by_outcome()
 
+def dropout_by_attendance():
+    file_path = os.path.join("..", "..", "data", "processed", 'students_with_attendance_and_homework.xlsx')
+    df = pd.read_excel(file_path)
 
+    # Replace empty values in attendance columns with 0
+    df['ANL1 Attendance'] = df['ANL1 Attendance'].fillna(0)
+    df['ANL2 Attendance'] = df['ANL2 Attendance'].fillna(0)
 
+    # Define attendance columns
+    attendance_columns = ['ANL1 Attendance', 'ANL2 Attendance']
+
+    # Function to bin attendance into groups
+    def bin_attendance(value):
+        return f"{int(value // 10) * 10}-{int(value // 10) * 10 + 10}"
+
+    # Loop through attendance columns
+    for col in attendance_columns:
+        # Create a new column for binned attendance
+        df[f'{col} Group'] = df[col].apply(bin_attendance)
+
+        # Calculate dropout percentages for each group
+        dropout_rates = (
+            df.groupby(f'{col} Group')['dropped out']
+            .apply(lambda x: (x == 'yes').sum() / len(x) * 100)
+            .reset_index(name='Dropout Percentage')
+        )
+
+        # Sort the groups in the correct order
+        dropout_rates = dropout_rates.sort_values(f'{col} Group', key=lambda x: [int(g.split('-')[0]) for g in x])
+
+        # Plot the bar chart
+        plt.figure(figsize=(10, 6))
+        plt.bar(dropout_rates[f'{col} Group'], dropout_rates['Dropout Percentage'], color='skyblue')
+        plt.xlabel(f'{col} (Grouped)')
+        plt.ylabel('Dropout Percentage')
+        plt.title(f'Dropout Percentage by {col}')
+        plt.xticks(rotation=45)
+        plt.tight_layout()
+        plt.show()
+
+# dropout_by_attendance()
 
 
