@@ -1,5 +1,6 @@
 import pandas as pd
 import os
+import matplotlib.pyplot as plt
 
 master_student_list = os.path.join("..", "..", "data", "processed", "Cleaned_master_student_list.xlsx")
 combined_students = os.path.join("..", "..", "data", "processed", "combined_students.xlsx")
@@ -310,5 +311,117 @@ def End_Result_ANL4():
     output_file = os.path.join("..", "..", "data", "processed", "Cleaned_master_student_list_finalv4.xlsx")
     df_ANL1.to_excel(output_file, index=False)
 
-End_Result_ANL4()
+# End_Result_ANL4()
+
+def male_female_dropout():
+    master_file = os.path.join("..", "..", "data", "processed", 'Cleaned_master_student_list_final.xlsx')
+    attendance_file = os.path.join("..", "..", "data", "raw", 'ANL1-2020-2021 attendance.xlsx')
+
+    df_master = pd.read_excel(master_file)
+    df_attendance = pd.read_excel(attendance_file)
+
+    df_combined = pd.merge(df_master, df_attendance, on='id')
+
+    df_filtered = df_combined[df_combined['Gender'].isin(['M', 'V'])]
+
+    dropout_rates = (
+        df_filtered.groupby('Gender')['dropped out']
+        .apply(lambda x: (x == 'yes').sum() / len(x) * 100)
+        .reset_index(name='Dropout Percentage')
+    )
+
+    dropout_rates['Gender'] = dropout_rates['Gender'].map({'M': 'Male', 'V': 'Female'})
+
+    colors = ['blue' if gender == 'Male' else 'red' for gender in dropout_rates['Gender']]
+
+    plt.bar(dropout_rates['Gender'], dropout_rates['Dropout Percentage'], color=colors)
+    plt.xlabel('Gender')
+    plt.ylabel('Dropout Percentage')
+    plt.title('Dropout Percentage by Gender')
+    plt.show()
+
+# male_female_dropout()
+
+def voltijd_deeltijd_dropout():
+    # File paths
+    master_file = os.path.join("..", "..", "data", "processed", 'Cleaned_master_student_list_final.xlsx')
+    combined_file = os.path.join("..", "..", "data", "processed", 'combined_students_unique.xlsx')
+
+    # Load the datasets
+    df_master = pd.read_excel(master_file)
+    df_combined = pd.read_excel(combined_file)
+
+    # Merge the datasets on 'id'
+    df_merged = pd.merge(df_combined, df_master, on='id')
+
+    # Filter data for valid 'voltijd deeltijd' values (VT and DT only)
+    df_filtered = df_merged[df_merged['voltijd deeltijd'].isin(['VT', 'DT'])]
+
+    # Calculate dropout rates
+    dropout_rates = (
+        df_filtered.groupby('voltijd deeltijd')['dropped out']
+        .apply(lambda x: (x == 'yes').sum() / len(x) * 100)
+        .reset_index(name='Dropout Percentage')
+    )
+
+    # Map VT and DT to descriptive labels
+    dropout_rates['voltijd deeltijd'] = dropout_rates['voltijd deeltijd'].map({'VT': 'Voltijd', 'DT': 'Deeltijd'})
+
+    # Define colors for bars
+    colors = ['green' if vt_dt == 'Voltijd' else 'orange' for vt_dt in dropout_rates['voltijd deeltijd']]
+
+    # Plot the bar chart
+    plt.bar(dropout_rates['voltijd deeltijd'], dropout_rates['Dropout Percentage'], color=colors)
+    plt.xlabel('Type of Enrollment')
+    plt.ylabel('Dropout Percentage')
+    plt.title('Dropout Percentage by Enrollment Type')
+    plt.show()
+
+# voltijd_deeltijd_dropout()
+
+def dropout_by_outcome():
+    master_file = os.path.join("..", "..", "data", "processed", 'Cleaned_master_student_list_final.xlsx')
+    df_master = pd.read_excel(master_file)
+
+    # Identify columns that end with 'outcome'
+    outcome_columns = [col for col in df_master.columns if col.endswith('outcome')]
+
+    # Define the fixed order and corresponding colors
+    outcome_order = ['FAIL MISERABLY', 'FAIL', 'PASS', 'PASS GREATLY']
+    outcome_colors = {'FAIL MISERABLY': 'red', 'FAIL': 'orange', 'PASS': 'lightgreen', 'PASS GREATLY': 'darkgreen'}
+
+    # Loop through each 'outcome' column and calculate dropout percentages
+    for outcome_col in outcome_columns:
+        # Group by outcome column and calculate dropout percentage
+        dropout_rates = (
+            df_master.groupby(outcome_col)['dropped out']
+            .apply(lambda x: (x == 'yes').sum() / len(x) * 100)
+            .reset_index(name='Dropout Percentage')
+        )
+
+        # Reorder the data to match the fixed order
+        dropout_rates[outcome_col] = pd.Categorical(
+            dropout_rates[outcome_col], categories=outcome_order, ordered=True
+        )
+        dropout_rates = dropout_rates.sort_values(outcome_col)
+
+        # Plot the chart for this outcome column
+        plt.figure(figsize=(8, 6))
+        plt.bar(
+            dropout_rates[outcome_col],
+            dropout_rates['Dropout Percentage'],
+            color=[outcome_colors[outcome] for outcome in dropout_rates[outcome_col]],
+        )
+        plt.xlabel(outcome_col.replace('_', ' ').title())
+        plt.ylabel('Dropout Percentage')
+        plt.title(f'Dropout Percentage by {outcome_col.replace("_", " ").title()}')
+        plt.xticks(rotation=45)
+        plt.tight_layout()
+        plt.show()
+
+# dropout_by_outcome()
+
+
+
+
 
