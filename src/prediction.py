@@ -1,7 +1,7 @@
 import pandas as pd
 import numpy as np
-from sklearn.model_selection import train_test_split
-from sklearn.ensemble import GradientBoostingClassifier
+from sklearn.model_selection import StratifiedKFold, cross_val_score
+from sklearn.linear_model import LogisticRegression
 from sklearn.preprocessing import StandardScaler, OneHotEncoder
 from sklearn.impute import SimpleImputer
 from sklearn.compose import ColumnTransformer
@@ -39,36 +39,33 @@ preprocessor = ColumnTransformer(
     ]
 )
 
-# Create the pipeline with Gradient Boosting Classifier
+# Create the pipeline
 pipeline = Pipeline(steps=[
     ('preprocessor', preprocessor),
-    ('classifier', GradientBoostingClassifier(n_estimators=50, learning_rate=0.05, max_depth=3, random_state=42))
+    ('classifier', LogisticRegression(max_iter=1000, random_state=42))
 ])
 
-# Split data into training and testing sets for model training
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42, stratify=y)
-pipeline.fit(X_train, y_train)
+# Fit the pipeline with the data
+pipeline.fit(X, y)
 
-# Console application
-def console_app():
+# Function to make a prediction based on user input
+def make_prediction():
     os.system('cls' if os.name == 'nt' else 'clear')
     print("Student Dropout Prediction")
     print("==========================")
+
     try:
-        # Ask user if they want to predict seen or unseen data
+
         mode = input("Do you want to predict 'seen' or 'unseen' data? (type 'seen' or 'unseen'): ").strip().lower()
         if mode not in ['seen', 'unseen']:
             print("Invalid input! Please type 'seen' or 'unseen'.")
             return
-
-        # Gather input from the user
         anl1_grade = float(input("Enter ANL 1 final grade: "))
         anl2_grade = float(input("Enter ANL 2 final grade: "))
         anl3_grade = float(input("Enter ANL 3 final grade: "))
         anl4_grade = float(input("Enter ANL 4 final grade: "))
         education_level = input("Enter education level (e.g., HAVO, VWO, MBO): ").strip().lower()
 
-        # Create input dataframe for prediction
         user_input = pd.DataFrame({
             'anl1 final grade': [anl1_grade],
             'anl2 final grade': [anl2_grade],
@@ -77,12 +74,13 @@ def console_app():
             'education_level': [education_level]
         })
 
-        # Make a prediction
+        # Make the prediction
         prediction = pipeline.predict(user_input)
+        
         prediction_label = "Yes" if prediction[0] == 1 else "No"
 
         if mode == 'seen':
-            # Check the actual value in the dataset
+        # Check the actual value in the dataset
             mask = (
                 ((df['anl1 final grade'].isna()) & (anl1_grade == 1) | (df['anl1 final grade'] == anl1_grade)) &
                 ((df['anl2 final grade'].isna()) & (anl2_grade == 1) | (df['anl2 final grade'] == anl2_grade)) &
@@ -90,7 +88,6 @@ def console_app():
                 ((df['anl4 final grade'].isna()) & (anl4_grade == 1) | (df['anl4 final grade'] == anl4_grade)) &
                 (df['education_level'] == education_level)
             )
-
             matching_row = df[mask]
             if not matching_row.empty:
                 actual_value = "Yes" if matching_row['dropped out'].values[0] == 1 else "No"
@@ -104,6 +101,6 @@ def console_app():
     except ValueError:
         print("Invalid input! Please enter the correct values.")
 
-# Run the console application
+# Call the make_prediction function
 if __name__ == "__main__":
-    console_app()
+    make_prediction()
