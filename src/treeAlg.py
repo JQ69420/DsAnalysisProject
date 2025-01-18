@@ -4,9 +4,10 @@ from sklearn.tree import DecisionTreeClassifier
 from sklearn.metrics import classification_report, accuracy_score
 from sklearn.preprocessing import LabelEncoder
 from imblearn.over_sampling import SMOTE 
+import os
 
 # Edit the file path to the location of the dataset
-file_path = 'Merged_Final_File.xlsx'
+file_path = os.path.join("..", "data", "processed", "Merged_Final_File_Updated.xlsx")
 data = pd.ExcelFile(file_path)
 sheet_data = data.parse("Sheet1")
 

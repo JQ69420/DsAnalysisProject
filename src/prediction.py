@@ -55,11 +55,6 @@ def make_prediction():
     print("==========================")
 
     try:
-
-        mode = input("Do you want to predict 'seen' or 'unseen' data? (type 'seen' or 'unseen'): ").strip().lower()
-        if mode not in ['seen', 'unseen']:
-            print("Invalid input! Please type 'seen' or 'unseen'.")
-            return
         anl1_grade = float(input("Enter ANL 1 final grade: "))
         anl2_grade = float(input("Enter ANL 2 final grade: "))
         anl3_grade = float(input("Enter ANL 3 final grade: "))
@@ -73,30 +68,12 @@ def make_prediction():
             'anl4 final grade': [anl4_grade],
             'education_level': [education_level]
         })
-
+        
         # Make the prediction
         prediction = pipeline.predict(user_input)
-        
         prediction_label = "Yes" if prediction[0] == 1 else "No"
 
-        if mode == 'seen':
-        # Check the actual value in the dataset
-            mask = (
-                ((df['anl1 final grade'].isna()) & (anl1_grade == 1) | (df['anl1 final grade'] == anl1_grade)) &
-                ((df['anl2 final grade'].isna()) & (anl2_grade == 1) | (df['anl2 final grade'] == anl2_grade)) &
-                ((df['anl3 final grade'].isna()) & (anl3_grade == 1) | (df['anl3 final grade'] == anl3_grade)) &
-                ((df['anl4 final grade'].isna()) & (anl4_grade == 1) | (df['anl4 final grade'] == anl4_grade)) &
-                (df['education_level'] == education_level)
-            )
-            matching_row = df[mask]
-            if not matching_row.empty:
-                actual_value = "Yes" if matching_row['dropped out'].values[0] == 1 else "No"
-                print(f"\nPrediction: Will the student drop out? {prediction_label}")
-                print(f"Actual Value in Dataset: {actual_value}")
-            else:
-                print("No matching record found in the dataset.")
-        else:
-            print(f"\nPrediction: {prediction_label}")
+        print(f"\nPrediction: Will the student drop out? {prediction_label}")
 
     except ValueError:
         print("Invalid input! Please enter the correct values.")
