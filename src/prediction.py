@@ -55,10 +55,23 @@ def make_prediction():
     print("==========================")
 
     try:
-        anl1_grade = float(input("Enter ANL 1 final grade: "))
-        anl2_grade = float(input("Enter ANL 2 final grade: "))
-        anl3_grade = float(input("Enter ANL 3 final grade: "))
-        anl4_grade = float(input("Enter ANL 4 final grade: "))
+        # Input and validation for grades
+        anl1_grade = float(input("Enter ANL 1 final grade (0-10): "))
+        if not 0 <= anl1_grade <= 10:
+            raise ValueError("Grade must be between 0 and 10.")
+
+        anl2_grade = float(input("Enter ANL 2 final grade (0-10): "))
+        if not 0 <= anl2_grade <= 10:
+            raise ValueError("Grade must be between 0 and 10.")
+
+        anl3_grade = float(input("Enter ANL 3 final grade (0-10): "))
+        if not 0 <= anl3_grade <= 10:
+            raise ValueError("Grade must be between 0 and 10.")
+
+        anl4_grade = float(input("Enter ANL 4 final grade (0-10): "))
+        if not 0 <= anl4_grade <= 10:
+            raise ValueError("Grade must be between 0 and 10.")
+        
         education_level = input("Enter education level (e.g., HAVO, VWO, MBO): ").strip().lower()
 
         user_input = pd.DataFrame({
@@ -75,8 +88,8 @@ def make_prediction():
 
         print(f"\nPrediction: Will the student drop out? {prediction_label}")
 
-    except ValueError:
-        print("Invalid input! Please enter the correct values.")
+    except ValueError as e:
+        print(f"Invalid input! {e}")
 
 # Call the make_prediction function
 if __name__ == "__main__":
